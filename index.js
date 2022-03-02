@@ -1,6 +1,9 @@
 var express = require('express');
 require('dotenv').config();
 
+//Add tokens to map
+var _teamTokenMap
+
 var HTTP_PORT = process.env.PORT | 8080;
 
 var app = express();
@@ -21,7 +24,6 @@ app.get('*', (req, res) => {
     console.log(req.path);
     return res.send('Live Site Expert');
 })
-
 
 app.listen(HTTP_PORT, error => {
     if(error)
