@@ -1,49 +1,52 @@
-const { postMessageChannel } = require('../util/PostMessage')
+const res = require('express/lib/response');
 
-const MY_BOT_ID = process.env.MY_BOT_ID
+var _eventState = new Map();
+module.exports._eventState = _eventState;
 
-function URLVerification(req, res) {
-    return res.send({ challenge:  req.body.challenge });
-}
+const {
+    messageEvent,
+    myMessageEvent,
+    defaultMessageEvent,
+    threadedMessageEvent,
+    changedMessageEvent,
+    threadedFileShareEvent,
+    fileShareEvent
+} = require('./MessageEvents')
 
-function messageEvent(event) {
-    let channel = event.event.channel;
-    let text = "Received Text: " + event.event.text;
-    if(event.event.files)
-        text += "\nFiles: " + event.event.files.map(e => e.name);
+const MY_BOT_ID = process.env.MY_BOT_ID;
+const MY_USER_ID = process.env.MY_USER_ID;
 
-    postMessageChannel(text, channel);
-}
-
-function botMessageEvent(event) {
-    if(event.event.bot_id == MY_BOT_ID)
-        return
-    messageEvent(event)
-}
-
-function deleteMessageEvent(event) {
-
-}
-
-function defaultMessageEvent(event) {
-
+async function URLVerification(req, res) {
+    res.send({ challenge:  req.body.challenge });
+    _eventState.set(req.body.event_id, 'DONE');
 }
 
 function defaultEvent(event) {
-    
+    console.log("Not a message event");  
+    _eventState.set(event.event_id, 'DONE') 
 }
 
-async function Event(event) {
+async function EventCallback(event) {
     switch(event.event.type) {
         case 'message':
-            if(!event.event.subtype)
-                messageEvent(event);
-            else if(event.event.subtype == 'bot_message')
-                botMessageEvent(event);
-            else if(event.event.subtype == 'message_deleted')
-                deleteMessageEvent(event);
-            else
+            console.log('type: message')
+            console.log('subtype: ' + event.event.subtype);
+
+            if(event.event.bot_id == MY_BOT_ID)
+                myMessageEvent(event);
+            else if(event.event.subtype == "message_changed")
+                changedMessageEvent(event);
+            else if(event.event.subtype == "file_share")
+                if(event.event.thread_ts)
+                    threadedFileShareEvent(event);
+                else   
+                    fileShareEvent(event);
+            else if(event.event.subtype)
                 defaultMessageEvent(event);
+            else if(event.event.thread_ts)
+                threadedMessageEvent(event);
+            else
+                messageEvent(event);
         break;
 
         default:
@@ -53,17 +56,26 @@ async function Event(event) {
 }
 
 async function defaultHandler(event) {
-    
+    console.log("Not a supported event type");
+    _eventState.set(event.event_id, 'DONE');
 }
 
-module.exports = function(req, res) {
+module.exports.handleEvent = function(req, res) {
+    if(_eventState.get(req.body.event_id))
+    {
+        //The event is being processed or done
+        //This is a retransmission for this event
+        return res.sendStatus(200);
+    }
+
+    _eventState.set(req.body.event_id, 'PROCESSING');
     switch(req.body.type) {
         case "url_verification":
             URLVerification(req, res);
         break;
 
         case "event_callback":
-            Event(req.body);
+            EventCallback(req.body);
             return res.sendStatus(200);
         break;
 

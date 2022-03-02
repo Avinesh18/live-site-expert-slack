@@ -1,8 +1,9 @@
 const path = require('path')
 const https = require('https')
 const querystring = require('querystring')
+const FormData = require('form-data')
 
-const SLACK_OAUTH = "https://slack.com/api/oauth.v2.access"
+const SLACK_OAUTH_URL = new URL("https://slack.com/api/oauth.v2.access");
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 
@@ -11,42 +12,36 @@ var _codeExchangeMap = new Map();
 module.exports.codeExchange = function(req, res) {
     console.log(req.query);
     // res.sendFile(path.join(__dirname, 'OAuthRedirect.html'))
-    res.sendStatus(200);
+    return res.sendStatus(200);
     let code = req.query.code;
     _codeExchangeMap.set(code, { state: 'QUEUED' });
 
-    let post_data = querystring.stringify({
-        client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET,
-        code: code
-    });
+    let form_data = new FormData();
+    form_data.append('code', code);
+    form_data.append('client_id', CLIENT_ID);
+    form_data.append('client_secret', CLIENT_SECRET);
 
-    let post_req = https.request({
-        hostname: "slack.com",
-        path: "/oauth/v2/authorize",
+    let options = {
+        host: SLACK_OAUTH_URL.hostname,
+        path: SLACK_OAUTH_URL.pathname,
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-    }, res => {
-        console.log('statusCode: ' + res.statusCode)
-        if(res.statusCode == 302)
-        {
-            console.log('redirect: ' + res.headers.location)
-        }
-            // console.log(res)
+        headers: form_data.getHeaders()
+    };
 
-        res.on('data', d => {
-            console.log(d.toString())
+    let req_callback = function(res) {
+        console.log('Status Code: ' + res.statusCode);
+
+        res.on('data', chunk => {
+            console.log(chunk.toString());
         })
 
         res.on('error', err => {
-            console.error(err)
+            console.error(err);
         })
-    } );
+    };
 
-    post_req.write(post_data);
-    post_req.end();
+    let post_req = https.request(options, req_callback);
+    form_data.pipe(post_req);
 }
 
 module.exports.codeExchangeStatus = function(req, res) {
