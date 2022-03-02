@@ -10,6 +10,8 @@ var _codeExchangeMap = new Map();
 module.exports._codeExchangeMap = _codeExchangeMap;
 
 const { getAccessToken } = require('../util/OAuthCodeExchange');
+const { getSelfInfo } = require('../util/UserInfo');
+const { storeSecurely } = require('../util/SecureStorage');
 
 module.exports.codeExchange = function(req, res) {
     let code = req.query.code;
@@ -18,7 +20,8 @@ module.exports.codeExchange = function(req, res) {
         return res.sendStatus(200);
     }
     console.log(req.query);
-    createNewInstallation(code);
+    _codeExchangeMap.set(code, 'PROCESSING');
+    getDetailsAndCreateInstallation(code);
     return res.sendStatus(200);
 }
 
@@ -26,6 +29,15 @@ module.exports.codeExchangeStatus = function(req, res) {
     return res.send({ state: _codeExchangeMap.get(req.query.code) });
 }
 
-async function createNewInstallation(code) {
-    let token = await getAccessToken(code);   
+async function getDetailsAndCreateInstallation(code) {
+    let token = await getAccessToken(code);
+    let self_data = await getSelfInfo(token);
+
+    await storeSecurely(self_data.team_id, {
+        user_id: self_data.user_id,
+        bot_id: self_data.bot_id,
+        bot_user_token: token
+    });
+
+    _codeExchangeMap.set(code, 'DONE');
 }

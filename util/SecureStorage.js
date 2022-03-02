@@ -1,7 +1,7 @@
 
 var { _codeExchangeMap } = require('../auth/OAuth');
 
-module.exports.storeSecurely = function(key, value) {
+module.exports.storeSecurely = async function(key, value) {
     //Need to configure a valut
 
     console.log('ADD TO .ENV');

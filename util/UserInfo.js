@@ -22,7 +22,11 @@ module.exports.getSelfInfo = function(access_token) {
             }
 
             res.on('data', chunk => {
-                resolve(chunk.toString());
+                let data = JSON.parse(chunk.toString());
+                if(data.ok)
+                    resolve(data);
+                else
+                    reject(new Error(data.error));
             })
 
             res.on('error', err => {
