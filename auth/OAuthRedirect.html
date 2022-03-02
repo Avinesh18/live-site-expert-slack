@@ -1,0 +1,39 @@
+<html>
+    <body>
+        <p id="display">PROCESSING</p>
+    </body>
+    <script>
+        const SLEEP_DURATION = 1000;
+        const OAUTH_STATUS_URL = "http://localhost:8080/auth/code-exchange-status";
+        const NO_OF_TRIES = 3;
+
+        var oauth_status_url = new URL(OAUTH_STATUS_URL);
+        var code = new URL(window.location.href).searchParams.get('code') || 5;
+        var params = { code: code };
+        oauth_status_url.search = new URLSearchParams(params).toString();
+        
+        (async function() {
+            let count = 0;
+            var polling = function() {
+                setTimeout(async function() {
+                    ++count;
+                    let response = await fetch(oauth_status_url);
+                    if(response.status != 200) {
+                        document.getElementById('display').innerHTML = 'ERROR. Code: ' + response.status;
+                        return;
+                    }
+                    let data = await response.json();
+                    document.getElementById('display').innerHTML = data.state;
+
+                    if(data.state == 'DONE')
+                        return;
+                    else if(count == NO_OF_TRIES)
+                        document.getElementById('display').innerHTML = 'TRY AGAIN LATER'
+                    else
+                        polling();
+
+                }, SLEEP_DURATION);};
+            polling();
+        })();
+    </script>
+</html>
