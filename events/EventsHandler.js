@@ -10,11 +10,11 @@ const {
     threadedMessageEvent,
     changedMessageEvent,
     threadedFileShareEvent,
-    fileShareEvent
+    fileShareEvent,
+    channelJoinEvent
 } = require('./MessageEvents')
 
-const MY_BOT_ID = process.env.MY_BOT_ID;
-const MY_USER_ID = process.env.MY_USER_ID;
+var { _installationDetails } = require('..//util/Installation');
 
 async function URLVerification(req, res) {
     res.send({ challenge:  req.body.challenge });
@@ -32,7 +32,9 @@ async function EventCallback(event) {
             console.log('type: message')
             console.log('subtype: ' + event.event.subtype);
 
-            if(event.event.bot_id == MY_BOT_ID)
+            if(event.event.subtype == 'channel_join')
+                channelJoinEvent(event)
+            else if(event.event.bot_id == _installationDetails.get(event.event.team).bot_id)
                 myMessageEvent(event);
             else if(event.event.subtype == "message_changed")
                 changedMessageEvent(event);

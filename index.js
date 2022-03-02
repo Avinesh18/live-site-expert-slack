@@ -1,8 +1,8 @@
 var express = require('express');
 require('dotenv').config();
 
-//Add tokens to map
-var _teamTokenMap
+var { _installationDetails } = require('./util/Installation');
+console.log(_installationDetails);
 
 var HTTP_PORT = process.env.PORT | 8080;
 

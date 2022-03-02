@@ -3,6 +3,7 @@ const { postMessageChannel, postMessageThread } = require('../util/PostMessage')
 var { _eventState } = require('./EventsHandler')
 
 module.exports.messageEvent = function (event) {
+    let team = event.event.team;
     let channel = event.event.channel;
     let thread_ts = event.event.ts;
 
@@ -10,40 +11,43 @@ module.exports.messageEvent = function (event) {
     if(event.event.files)
         text += "\nFiles: " + event.event.files.map(e => e.name);
 
-    postMessageThread(text, channel, thread_ts, false);
+    postMessageThread(team, channel, text, thread_ts, false);
     _eventState.set(event.event_id, 'DONE');
 }
 
 module.exports.threadedMessageEvent = function(event) {
-    console.log('thread event');    
+    console.log('thread event');
+    let team = event.event.team;    
     let channel = event.event.channel;
     let thread_ts = event.event.thread_ts;
 
     let text = "Received Text: " + event.event.text;
     
-    postMessageThread(text, channel, thread_ts, false);
+    postMessageThread(team, channel, text, thread_ts, false);
     _eventState.set(event.event_id, 'DONE');
 }
 
 module.exports.fileShareEvent = function (event) {
+    let team = event.event.team;
     let channel = event.event.channel;
     let thread_ts = event.event.ts;
 
     let text = "Received Text: " + event.event.text;
     text += "\nFiles: " + event.event.files.map(e => e.name);
 
-    postMessageThread(text, channel, thread_ts, false);
+    postMessageThread(team, channel, text, thread_ts, false);
     _eventState.set(event.event_id, 'DONE');
 }
 
 module.exports.threadedFileShareEvent = function(event) {
+    let team = event.event.team;
     let channel = event.event.channel;
     let thread_ts = event.event.thread_ts;
 
     let text = "Received Text: " + event.event.text;
     text += "\nFiles: " + event.event.files.map(e => e.name);
 
-    postMessageThread(text, channel, thread_ts, false);
+    postMessageThread(team, channel, text, thread_ts, false);
     _eventState.set(event.event_id, 'DONE');
 }
 
@@ -88,7 +92,7 @@ module.exports.defaultMessageEvent = function (event) {
     _eventState.set(event.event_id, 'DONE');
 }
 
-module.exports.channelJoin = function (event) {
-    console.log("USER: " + event.user + " joined CHANNEL: " + event.channel);
+module.exports.channelJoinEvent = function (event) {
+    console.log("USER: " + event.event.user + " joined CHANNEL: " + event.event.channel);
     _eventState.set(event.event_id, 'DONE');
 }

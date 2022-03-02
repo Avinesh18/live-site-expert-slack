@@ -1,7 +1,7 @@
-const https = require('https')
+const https = require('https');
 
 const POST_MESSAGE_URL = new URL("https://slack.com/api/chat.postMessage")
-const BOT_USER_TOKEN = process.env.BOT_USER_TOKEN
+var { _installationDetails } = require('./Installation');
 
 function defaultResponseCallback(res) {
     console.log('statusCode: ' + res.statusCode);
@@ -15,15 +15,16 @@ function defaultResponseCallback(res) {
     })
 }
 
-module.exports.postMessageChannel = async function(text, channel, callback) {
+module.exports.postMessageChannel = async function(team, channel, text, callback) {
     console.log("Sending \"" + text + "\" to channel");
+    let bot_user_token = _installationDetails.get(team).bot_user_token;
     let options = {
         hostname: POST_MESSAGE_URL.hostname,
         path: POST_MESSAGE_URL.pathname,
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + BOT_USER_TOKEN 
+            'Authorization': 'Bearer ' + bot_user_token
         }
     };
 
@@ -38,8 +39,10 @@ module.exports.postMessageChannel = async function(text, channel, callback) {
     req.end();
 }
 
-module.exports.postMessageThread = async function(text, channel, thread_ts, broadcast, callback) {
+module.exports.postMessageThread = async function(team, channel, text, thread_ts, broadcast, callback) {
     console.log("Sending \"" + text + "\" to thread");
+    console.log("Team: " + team);
+    let bot_user_token = _installationDetails.get(team).bot_user_token;
     broadcast = broadcast || false;
     let options = {
         hostname: POST_MESSAGE_URL.hostname,
@@ -47,7 +50,7 @@ module.exports.postMessageThread = async function(text, channel, thread_ts, broa
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + BOT_USER_TOKEN
+            'Authorization': 'Bearer ' + bot_user_token
         }
     };
 
