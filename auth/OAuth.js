@@ -22,6 +22,7 @@ module.exports.codeExchange = function(req, res) {
     console.log(req.query);
     _codeExchangeMap.set(code, 'PROCESSING');
     getDetailsAndCreateInstallation(code);
+    // return res.sendFile(path.join(__dirname, 'OAuthRedirect.html'));
     return res.sendStatus(200);
 }
 

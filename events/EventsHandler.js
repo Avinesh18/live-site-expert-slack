@@ -38,11 +38,12 @@ async function EventCallback(event) {
                 myMessageEvent(event);
             else if(event.event.subtype == "message_changed")
                 changedMessageEvent(event);
-            else if(event.event.subtype == "file_share")
+            else if(event.event.subtype == "file_share") {
                 if(event.event.thread_ts)
                     threadedFileShareEvent(event);
                 else   
                     fileShareEvent(event);
+            }
             else if(event.event.subtype)
                 defaultMessageEvent(event);
             else if(event.event.thread_ts)

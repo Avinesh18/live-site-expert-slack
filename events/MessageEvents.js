@@ -1,15 +1,23 @@
 const e = require('express');
 const { postMessageChannel, postMessageThread } = require('../util/PostMessage')
-var { _eventState } = require('./EventsHandler')
+var { _eventState } = require('./EventsHandler');
+var { getPlaybookQuery } = require('../util/Playbooks');
 
-module.exports.messageEvent = function (event) {
+module.exports.messageEvent = async function (event) {
     let team = event.event.team;
     let channel = event.event.channel;
     let thread_ts = event.event.ts;
-
-    let text = "Received Text: " + event.event.text;
-    if(event.event.files)
-        text += "\nFiles: " + event.event.files.map(e => e.name);
+    let received_text = event.event.text;
+    
+    let alert_message_regex = /(^alert: )(.*)/
+    let alert_details = received_text.match(alert_message_regex);
+    if(alert_details) {
+        console.log("Alert: " + alert_details[2]);
+        text = await getPlaybookQuery(event.event.channel, alert_details[2])
+    }
+    else {
+        text = "Received Text: " + event.event.text;
+    }
 
     postMessageThread(team, channel, text, thread_ts, false);
     _eventState.set(event.event_id, 'DONE');

@@ -1,6 +1,4 @@
 
-var { _codeExchangeMap } = require('../auth/OAuth');
-
 module.exports.storeSecurely = async function(key, value) {
     //Need to configure a valut
 

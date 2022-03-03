@@ -1,6 +1,4 @@
-const { rejects } = require('assert');
 const https = require('https');
-const { resolve } = require('path');
 
 const AUTH_TEST_URL = new URL("https://slack.com/api/auth.test");
 
